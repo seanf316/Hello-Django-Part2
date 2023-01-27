@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Item
 from .forms import ItemForm
 
 
-# Create your views here.
+# Read your Items here.
 def get_todo_list(request):
     items = Item.objects.all()
     context = {"items": items}
@@ -12,6 +12,7 @@ def get_todo_list(request):
     return render(request, "todo/todo_list.html", context)
 
 
+# Add an Item
 # def add_item(request):
 #     if request.method == "POST":
 #         # here we will create variables that will take the attributes
@@ -35,7 +36,7 @@ def get_todo_list(request):
 #     # access to our form in the add_item.html
 #     return render(request, "todo/add_item.html", context)
 
-
+# Add an Item
 def add_item(request):
     if request.method == "POST":
         # Instead of trying to create the form manually lets let the new form
@@ -54,3 +55,42 @@ def add_item(request):
     # adding context as an argument in the render below insures we have access
     # to our form in the add_item.html
     return render(request, "todo/add_item.html", context)
+
+
+# Update an Item
+def edit_item(request, item_id):
+    # Adding the item_id parameter as this is what we linked in the button
+    # We need to get a copy of the specific item using the below method
+    item = get_object_or_404(Item, id=item_id)
+    # We need to create a Post handler to allow update of item
+    if request.method == "POST":
+        # Only change from the above is we pass the instance of the form
+        # we are editing i.e. item_id
+        form = ItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+        return redirect("get_todo_list")
+    # Now we will create an instance of the form using the below
+    form = ItemForm(instance=item)
+    context = {"form": form}
+    return render(request, "todo/edit_item.html", context)
+
+
+# Toggle "Done" on an Item
+def toggle_item(request, item_id):
+    # Adding the item_id parameter as this is what we linked in the button
+    # We need to get a copy of the specific item using the below method
+    item = get_object_or_404(Item, id=item_id)
+    # Change the 'done' to the opposite using not
+    item.done = not item.done
+    item.save()
+    return redirect("get_todo_list")
+
+
+# Delete Item
+def delete_item(request, item_id):
+    # Adding the item_id parameter as this is what we linked in the button
+    # We need to get a copy of the specific item using the below method
+    item = get_object_or_404(Item, id=item_id)
+    item.delete()
+    return redirect("get_todo_list")
